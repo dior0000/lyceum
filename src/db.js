@@ -3,8 +3,15 @@ const { Pool, types } = require('pg');
 // BIGINT (tg_id, COUNT) вяртаць лікам — id Telegram змяшчаюцца ў 2^53
 types.setTypeParser(20, (v) => parseInt(v, 10));
 
+// Neon праз Vercel Marketplace дадае зменныя з прэфіксам праекта — падтрымліваем абодва варыянты
+const CONNECTION_STRING =
+  process.env.DATABASE_URL ||
+  process.env.lyceum_DATABASE_URL ||
+  process.env.lyceum_POSTGRES_URL ||
+  process.env.POSTGRES_URL;
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: CONNECTION_STRING,
   ssl: { rejectUnauthorized: false },
   max: 1, // serverless: адно злучэнне на інстанс
 });
