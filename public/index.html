@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="be">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>Ліцэй БДУ · Апошні званок</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="style.css?v=9">
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="crest-row">
+      <svg class="laurel" viewBox="0 0 20 40" aria-hidden="true"><path d="M14 38C7 30 6 16 12 3" fill="none" stroke="#c9a227" stroke-width="1.6" stroke-linecap="round"/><ellipse cx="9" cy="8" rx="4.2" ry="1.8" fill="#c9a227" transform="rotate(-55 9 8)"/><ellipse cx="7" cy="15" rx="4.2" ry="1.8" fill="#c9a227" transform="rotate(-40 7 15)"/><ellipse cx="7" cy="22" rx="4.2" ry="1.8" fill="#c9a227" transform="rotate(-25 7 22)"/><ellipse cx="8.5" cy="29" rx="4.2" ry="1.8" fill="#c9a227" transform="rotate(-10 8.5 29)"/><ellipse cx="11" cy="35" rx="4" ry="1.8" fill="#c9a227" transform="rotate(5 11 35)"/></svg>
+      <div class="crest-text">
+        <span class="app-title">🎓 ЛІЦЭЙ БДУ</span>
+        <span class="app-sub">апошні званок</span>
+      </div>
+      <svg class="laurel right" viewBox="0 0 20 40" aria-hidden="true"><path d="M14 38C7 30 6 16 12 3" fill="none" stroke="#c9a227" stroke-width="1.6" stroke-linecap="round"/><ellipse cx="9" cy="8" rx="4.2" ry="1.8" fill="#c9a227" transform="rotate(-55 9 8)"/><ellipse cx="7" cy="15" rx="4.2" ry="1.8" fill="#c9a227" transform="rotate(-40 7 15)"/><ellipse cx="7" cy="22" rx="4.2" ry="1.8" fill="#c9a227" transform="rotate(-25 7 22)"/><ellipse cx="8.5" cy="29" rx="4.2" ry="1.8" fill="#c9a227" transform="rotate(-10 8.5 29)"/><ellipse cx="11" cy="35" rx="4" ry="1.8" fill="#c9a227" transform="rotate(5 11 35)"/></svg>
+    </div>
+  </header>
+
+  <!-- Загрузка -->
+  <div id="screen-loading" class="screen center">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Памылка / не ў Telegram / бан -->
+  <div id="screen-error" class="screen center" hidden>
+    <div class="big-emoji">😕</div>
+    <p id="error-text">Нешта пайшло не так</p>
+  </div>
+
+  <!-- Рэгістрацыя -->
+  <div id="screen-reg" class="screen" hidden>
+    <div class="reg-progress"><div id="reg-bar"></div></div>
+
+    <div class="step" data-step="0">
+      <h1>Як цябе завуць?</h1>
+      <input id="reg-name" type="text" maxlength="40" placeholder="Імя" autocomplete="off">
+      <button class="btn primary" id="btn-name-next">Далей</button>
+    </div>
+
+    <div class="step" data-step="1" hidden>
+      <h1>Твой клас</h1>
+      <div id="reg-grades">
+        <button class="btn grade-btn" data-reg-grade="10">🎓 10-я класы</button>
+        <button class="btn grade-btn" data-reg-grade="11">🎓 11-я класы</button>
+      </div>
+      <div id="reg-class-grid" class="grid class-grid" hidden></div>
+      <button class="btn ghost" id="reg-grade-back" hidden>‹ Да выбару паралелі</button>
+    </div>
+
+    <div class="step" data-step="2" hidden>
+      <h1>Ты…</h1>
+      <div class="grid two">
+        <button class="btn choice" data-gender="m">👦 Хлопец</button>
+        <button class="btn choice" data-gender="f">👧 Дзяўчына</button>
+      </div>
+    </div>
+
+    <div class="step" data-step="3" hidden>
+      <h1>Шукаеш пару?</h1>
+      <div class="grid two">
+        <button class="btn choice" data-looking="1">💘 Так</button>
+        <button class="btn choice" data-looking="0">🙈 Пакуль не</button>
+      </div>
+      <p class="hint">Калі «пакуль не» — тваю анкету не будзе відаць у стужцы, але ты зможаш уключыць яе пазней.</p>
+    </div>
+
+    <div class="step" data-step="4" hidden>
+      <h1>Тваё фота</h1>
+      <p class="hint">Без фота ніяк — па ім цябе будуць пазнаваць 😉</p>
+      <img id="photo-preview" class="photo-preview" hidden alt="">
+      <input id="photo-input" type="file" accept="image/*" hidden>
+      <button class="btn" id="btn-upload">📷 Загрузіць фота</button>
+      <button class="btn" id="btn-avatar">✨ Узяць аватарку з Telegram</button>
+      <button class="btn primary" id="btn-photo-next" disabled>Далей</button>
+    </div>
+
+    <div class="step" data-step="5" hidden>
+      <h1>Так цябе ўбачаць іншыя</h1>
+      <div class="card small" id="preview-card">
+        <img id="preview-photo" alt="">
+        <div class="card-overlay"><div class="card-name" id="preview-name"></div></div>
+      </div>
+      <button class="btn primary" id="btn-finish">Гатова 🎉</button>
+      <button class="btn ghost" id="btn-restart">Змяніць</button>
+    </div>
+
+  </div>
+
+  <!-- Асноўны экран -->
+  <div id="screen-main" class="screen" hidden>
+
+    <section id="tab-feed" class="tab">
+      <button class="btn classes-btn" id="btn-classes">🏫 Профілі па класах</button>
+      <div id="feed-card-wrap">
+        <div class="card" id="feed-card" hidden>
+          <img id="feed-photo" alt="">
+          <button class="report" id="btn-report" title="Паскардзіцца">🚩</button>
+          <div class="card-overlay"><div class="card-name" id="feed-name"></div></div>
+        </div>
+        <div id="feed-empty" class="center-block" hidden>
+          <div class="big-emoji">🕊️</div>
+          <p>Анкеты скончыліся.<br>Зазірні пазней!</p>
+          <button class="btn" id="btn-feed-refresh">Абнавіць</button>
+        </div>
+      </div>
+      <div class="actions" id="feed-actions" hidden>
+        <button class="round skip" id="btn-skip">✖️</button>
+        <button class="round like" id="btn-like">❤️</button>
+      </div>
+    </section>
+
+    <section id="tab-matches" class="tab" hidden>
+      <h1>Мае мэтчы</h1>
+      <div id="matches-list"></div>
+      <div id="matches-empty" class="center-block" hidden>
+        <div class="big-emoji">💔</div>
+        <p>Пакуль няма ўзаемных сімпатый.<br>Гартай стужку — усё наперадзе!</p>
+      </div>
+    </section>
+
+    <section id="tab-profile" class="tab" hidden>
+      <h1>Мой профіль</h1>
+      <div class="card small">
+        <img id="my-photo" alt="">
+        <div class="card-overlay"><div class="card-name" id="my-name"></div></div>
+      </div>
+      <label class="switch-row">
+        <span>💘 Шукаю пару</span>
+        <input type="checkbox" id="looking-toggle">
+        <span class="switch"></span>
+      </label>
+      <button class="btn" id="btn-edit">✏️ Рэдагаваць анкету</button>
+      <button class="btn danger" id="btn-delete">🗑️ Выдаліць анкету</button>
+    </section>
+
+    <nav class="tabbar">
+      <button class="tabbtn active" data-tab="feed">🔥<span>Стужка</span></button>
+      <button class="tabbtn" data-tab="matches">💘<span>Мэтчы</span></button>
+      <button class="tabbtn" data-tab="profile">👤<span>Профіль</span></button>
+    </nav>
+  </div>
+
+  <!-- Панэль «па класах» -->
+  <div id="class-sheet" class="sheet" hidden>
+    <div class="sheet-inner">
+      <div class="sheet-head">
+        <button id="sheet-back" hidden>‹</button>
+        <b id="sheet-title">Класы</b>
+        <button id="sheet-close">✕</button>
+      </div>
+      <div class="sheet-body">
+        <div id="sheet-grades">
+          <button class="btn grade-btn" data-grade="10">🎓 10-я класы</button>
+          <button class="btn grade-btn" data-grade="11">🎓 11-я класы</button>
+        </div>
+        <div id="sheet-classes" hidden>
+          <div id="sheet-class-grid" class="grid"></div>
+        </div>
+        <div id="sheet-profiles" class="profiles-grid" hidden></div>
+        <div id="sheet-empty" class="center-block" hidden>
+          <div class="big-emoji">🫥</div>
+          <p>У гэтым класе пакуль нікога няма<br>або ўсе анкеты ўжо прагледжаныя</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Аверлэй мэтча -->
+  <div id="match-overlay" class="overlay" hidden>
+    <div class="match-box">
+      <div class="laurel-row">
+        <svg class="laurel big" viewBox="0 0 20 40" aria-hidden="true"><path d="M14 38C7 30 6 16 12 3" fill="none" stroke="#c9a227" stroke-width="1.6" stroke-linecap="round"/><ellipse cx="9" cy="8" rx="4.2" ry="1.8" fill="#c9a227" transform="rotate(-55 9 8)"/><ellipse cx="7" cy="15" rx="4.2" ry="1.8" fill="#c9a227" transform="rotate(-40 7 15)"/><ellipse cx="7" cy="22" rx="4.2" ry="1.8" fill="#c9a227" transform="rotate(-25 7 22)"/><ellipse cx="8.5" cy="29" rx="4.2" ry="1.8" fill="#c9a227" transform="rotate(-10 8.5 29)"/><ellipse cx="11" cy="35" rx="4" ry="1.8" fill="#c9a227" transform="rotate(5 11 35)"/></svg>
+        <div>
+          <div class="big-emoji">💘</div>
+          <h1>Гэта мэтч!</h1>
+        </div>
+        <svg class="laurel big right" viewBox="0 0 20 40" aria-hidden="true"><path d="M14 38C7 30 6 16 12 3" fill="none" stroke="#c9a227" stroke-width="1.6" stroke-linecap="round"/><ellipse cx="9" cy="8" rx="4.2" ry="1.8" fill="#c9a227" transform="rotate(-55 9 8)"/><ellipse cx="7" cy="15" rx="4.2" ry="1.8" fill="#c9a227" transform="rotate(-40 7 15)"/><ellipse cx="7" cy="22" rx="4.2" ry="1.8" fill="#c9a227" transform="rotate(-25 7 22)"/><ellipse cx="8.5" cy="29" rx="4.2" ry="1.8" fill="#c9a227" transform="rotate(-10 8.5 29)"/><ellipse cx="11" cy="35" rx="4" ry="1.8" fill="#c9a227" transform="rotate(5 11 35)"/></svg>
+      </div>
+      <img id="match-photo" alt="">
+      <p id="match-name"></p>
+      <button class="btn primary" id="btn-match-write">💬 Напісаць</button>
+      <button class="btn ghost" id="btn-match-close">Гартаць далей</button>
+    </div>
+  </div>
+
+  <div id="toast" hidden></div>
+
+  <script src="app.js?v=9"></script>
+</body>
+</html>
