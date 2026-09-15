@@ -82,7 +82,7 @@ function startRegistration(editing) {
     reg.looking = me.looking;
     reg.photoFile = null;
     reg.useAvatar = false;
-    setPhotoPreview('/uploads/' + me.photo);
+    setPhotoPreview(me.photo);
   } else {
     reg.name = tg?.initDataUnsafe?.user?.first_name || '';
     $('photo-preview').hidden = true;
@@ -107,7 +107,7 @@ function setPhotoPreview(src) {
 }
 
 function renderRegPreview() {
-  $('preview-photo').src = $('photo-preview').src || (me ? '/uploads/' + me.photo : '');
+  $('preview-photo').src = $('photo-preview').src || (me ? me.photo : '');
   $('preview-name').textContent = `${reg.name}, ${reg.klass}`;
 }
 
@@ -275,7 +275,7 @@ function nextCard() {
     card.classList.remove('fly-left', 'fly-right', 'card-in');
     void card.offsetWidth; // перазапуск анімацыі з'яўлення
     card.classList.add('card-in');
-    $('feed-photo').src = '/uploads/' + current.photo;
+    $('feed-photo').src = current.photo;
     $('feed-name').textContent = `${current.name}, ${current.klass}`;
   }
 }
@@ -405,7 +405,7 @@ async function openClassProfiles(klass) {
     card.className = 'pcard';
     card.style.animationDelay = i * 40 + 'ms';
     const img = document.createElement('img');
-    img.src = '/uploads/' + u.photo;
+    img.src = u.photo;
     const name = document.createElement('div');
     name.className = 'pname';
     name.textContent = u.name; // без номера класса — он выбран выше
@@ -447,7 +447,7 @@ $('class-sheet').addEventListener('click', (e) => {
 let matchUser = null;
 function showMatch(u) {
   matchUser = u;
-  $('match-photo').src = '/uploads/' + u.photo;
+  $('match-photo').src = u.photo;
   $('match-name').textContent = `${u.name}, ${u.klass}`;
   $('match-overlay').hidden = false;
   tg?.HapticFeedback?.notificationOccurred('success');
@@ -469,7 +469,7 @@ async function loadMatches() {
     const row = document.createElement('div');
     row.className = 'match-row';
     const img = document.createElement('img');
-    img.src = '/uploads/' + u.photo;
+    img.src = u.photo;
     const info = document.createElement('div');
     info.className = 'info';
     const b = document.createElement('b');
@@ -489,7 +489,7 @@ async function loadMatches() {
 // ---------- профиль ----------
 function renderProfile() {
   if (!me) return;
-  $('my-photo').src = '/uploads/' + me.photo;
+  $('my-photo').src = me.photo;
   $('my-name').textContent = `${me.name}, ${me.klass}`;
   $('looking-toggle').checked = !!me.looking;
 }
