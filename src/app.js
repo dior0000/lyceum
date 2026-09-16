@@ -42,15 +42,23 @@ const upload = multer({
   fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype)),
 });
 
-// дыягностыка канфігурацыі (без сакрэтаў)
+// дыягностыка канфігурацыі: толькі агрэгаты, без імёнаў і id
 app.get('/api/health', (req, res) => {
-  one('SELECT COUNT(*) AS c FROM users')
-    .then((r) => res.json({
+  one(`SELECT
+      (SELECT COUNT(*) FROM users) AS users,
+      (SELECT COUNT(*) FROM users WHERE gender = 'm') AS boys,
+      (SELECT COUNT(*) FROM users WHERE gender = 'f') AS girls,
+      (SELECT COUNT(*) FROM users WHERE looking = 1) AS looking,
+      (SELECT COUNT(*) FROM users WHERE hidden = 1) AS hidden,
+      (SELECT COUNT(*) FROM users WHERE banned = 1) AS banned,
+      (SELECT COUNT(*) FROM likes) AS swipes,
+      (SELECT COUNT(*) FROM photos) AS photos`)
+    .then((s) => res.json({
       ok: true,
       webapp_url: process.env.WEBAPP_URL || null,
       bot_token_id: (process.env.BOT_TOKEN || '').split(':')[0] || null,
       admin_id: process.env.ADMIN_ID || null,
-      users: r.c,
+      ...s,
     }))
     .catch((e) => res.status(500).json({ ok: false, error: e.message }));
 });
