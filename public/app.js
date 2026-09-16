@@ -178,14 +178,37 @@ document.querySelectorAll('[data-looking]').forEach((b) => {
 });
 
 // шаг 4: фото
+// сціскаем фота ў браўзеры: анкеты грузяцца хутка, база не раздзімаецца
+function compressPhoto(file, maxSide = 1000, quality = 0.82) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((blob) => resolve(blob && blob.size < file.size ? blob : file), 'image/jpeg', quality);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    };
+    img.src = url;
+  });
+}
+
 $('btn-upload').onclick = () => $('photo-input').click();
-$('photo-input').onchange = () => {
+$('photo-input').onchange = async () => {
   const file = $('photo-input').files[0];
   if (!file) return;
-  if (file.size > 8 * 1024 * 1024) return toast('Файл большы за 8 МБ — выберы іншае фота');
-  reg.photoFile = file;
+  const photo = await compressPhoto(file);
+  if (photo.size > 4 * 1024 * 1024) return toast('Фота занадта вялікае — выберы іншае');
+  reg.photoFile = photo;
   reg.useAvatar = false;
-  setPhotoPreview(URL.createObjectURL(file));
+  setPhotoPreview(URL.createObjectURL(photo));
 };
 
 $('btn-avatar').onclick = async () => {
@@ -216,7 +239,7 @@ $('btn-finish').onclick = async () => {
     fd.append('klass', reg.klass);
     fd.append('gender', reg.gender);
     fd.append('looking', String(reg.looking));
-    if (reg.photoFile) fd.append('photo', reg.photoFile);
+    if (reg.photoFile) fd.append('photo', reg.photoFile, 'photo.jpg');
     if (reg.useAvatar) fd.append('use_avatar', '1');
     const res = await api('/me', { method: 'POST', body: fd });
     const data = await res.json();

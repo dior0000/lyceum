@@ -3,7 +3,6 @@ const path = require('path');
 const crypto = require('crypto');
 const express = require('express');
 const multer = require('multer');
-const { put, del } = require('@vercel/blob');
 const { webhookCallback } = require('grammy');
 const { q, one } = require('./db');
 const { verifyInitData } = require('./auth');
@@ -39,8 +38,27 @@ app.use(
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 8 * 1024 * 1024 },
+  limits: { fileSize: 4 * 1024 * 1024 },
   fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype)),
+});
+
+// ---------- фота (захоўваюцца ў базе) ----------
+// Адрас з выпадковым UUID, таму спасылку не падабраць; заголовак тут перадаць
+// немагчыма (<img src>), таму маршрут стаіць да праверкі initData.
+app.get('/api/photo/:id', (req, res) => {
+  const id = req.params.id;
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return res.status(400).end();
+  one('SELECT mime, data FROM photos WHERE id = $1', [id])
+    .then((row) => {
+      if (!row) return res.status(404).end();
+      res.setHeader('Content-Type', row.mime);
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      res.send(row.data);
+    })
+    .catch((e) => {
+      console.error('photo:', e);
+      if (!res.headersSent) res.status(500).end();
+    });
 });
 
 // ---------- дапаможныя ----------
@@ -54,17 +72,15 @@ function ownProfile(u) {
   return { ...publicProfile(u), looking: u.looking, hidden: u.hidden };
 }
 
-async function savePhotoBlob(buffer, mimetype) {
-  const ext = { 'image/png': '.png', 'image/webp': '.webp' }[mimetype] || '.jpg';
-  const blob = await put('photos/' + crypto.randomUUID() + ext, buffer, {
-    access: 'public',
-    contentType: mimetype || 'image/jpeg',
-  });
-  return blob.url;
+async function savePhoto(buffer, mimetype) {
+  const id = crypto.randomUUID();
+  await q('INSERT INTO photos (id, mime, data) VALUES ($1, $2, $3)', [id, mimetype || 'image/jpeg', buffer]);
+  return '/api/photo/' + id;
 }
 
-function deletePhotoBlob(url) {
-  if (url && /^https:/.test(url)) del(url).catch(() => {});
+function deletePhoto(url) {
+  const id = String(url || '').split('/').pop();
+  if (/^[0-9a-f-]{36}$/i.test(id)) q('DELETE FROM photos WHERE id = $1', [id]).catch(() => {});
 }
 
 async function downloadAvatar(tgId) {
@@ -130,11 +146,11 @@ app.post('/api/me', upload.single('photo'), wrap(async (req, res) => {
 
   let photo = null;
   if (req.file) {
-    photo = await savePhotoBlob(req.file.buffer, req.file.mimetype);
+    photo = await savePhoto(req.file.buffer, req.file.mimetype);
   } else if (req.body.use_avatar === '1') {
     const buf = await downloadAvatar(req.tg.id).catch(() => null);
     if (!buf) return res.status(400).json({ error: 'Не атрымалася ўзяць аватарку з Telegram — загрузі фота файлам' });
-    photo = await savePhotoBlob(buf, 'image/jpeg');
+    photo = await savePhoto(buf, 'image/jpeg');
   }
 
   const username = req.tg.username || null;
@@ -146,7 +162,7 @@ app.post('/api/me', upload.single('photo'), wrap(async (req, res) => {
       [req.tg.id, username, fields.name, fields.klass, fields.gender, fields.looking, photo]
     );
   } else {
-    if (photo) deletePhotoBlob(req.me.photo);
+    if (photo) deletePhoto(req.me.photo);
     await q(
       'UPDATE users SET username = $1, name = $2, klass = $3, gender = $4, looking = $5, photo = $6 WHERE tg_id = $7',
       [username, fields.name, fields.klass, fields.gender, fields.looking, photo || req.me.photo, req.tg.id]
@@ -165,7 +181,7 @@ app.patch('/api/me/looking', wrap(async (req, res) => {
 
 app.delete('/api/me', wrap(async (req, res) => {
   if (!req.me) return res.status(404).json({ error: 'not_registered' });
-  deletePhotoBlob(req.me.photo);
+  deletePhoto(req.me.photo);
   await q('DELETE FROM users WHERE tg_id = $1', [req.tg.id]);
   await q('DELETE FROM likes WHERE from_id = $1 OR to_id = $1', [req.tg.id]);
   await q('DELETE FROM reports WHERE from_id = $1 OR to_id = $1', [req.tg.id]);

@@ -28,6 +28,11 @@ function profileLink(u) {
   return u.username ? `https://t.me/${u.username}` : `tg://user?id=${u.tg_id}`;
 }
 
+// у базе захоўваецца адносны шлях — Telegram патрэбны поўны адрас
+function photoUrl(u) {
+  return /^https?:/.test(u.photo) ? u.photo : WEBAPP_URL + u.photo;
+}
+
 bot.command('start', (ctx) =>
   ctx.reply(
     '🎓 <b>Прывітанне, ліцэіст!</b>\n\n' +
@@ -129,7 +134,7 @@ async function sendMatchTo(user, other) {
     `💘 <b>У вас мэтч!</b>\n\n` +
     `<a href="${profileLink(other)}">${esc(other.name)}, ${esc(other.klass)}</a> таксама лайкнуў(-ла) цябе.\n` +
     `Напішыце адно аднаму! 💬`;
-  await bot.api.sendPhoto(user.tg_id, other.photo, {
+  await bot.api.sendPhoto(user.tg_id, photoUrl(other), {
     caption,
     parse_mode: 'HTML',
     reply_markup: other.username

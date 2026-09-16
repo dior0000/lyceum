@@ -45,6 +45,12 @@ function ready() {
         created_at TIMESTAMPTZ DEFAULT now(),
         PRIMARY KEY (from_id, to_id)
       );
+      CREATE TABLE IF NOT EXISTS photos (
+        id         UUID PRIMARY KEY,
+        mime       TEXT NOT NULL,
+        data       BYTEA NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT now()
+      );
     `);
   }
   return readyPromise;
