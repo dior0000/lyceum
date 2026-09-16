@@ -42,6 +42,19 @@ const upload = multer({
   fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype)),
 });
 
+// дыягностыка канфігурацыі (без сакрэтаў)
+app.get('/api/health', (req, res) => {
+  one('SELECT COUNT(*) AS c FROM users')
+    .then((r) => res.json({
+      ok: true,
+      webapp_url: process.env.WEBAPP_URL || null,
+      bot_token_id: (process.env.BOT_TOKEN || '').split(':')[0] || null,
+      admin_id: process.env.ADMIN_ID || null,
+      users: r.c,
+    }))
+    .catch((e) => res.status(500).json({ ok: false, error: e.message }));
+});
+
 // ---------- фота (захоўваюцца ў базе) ----------
 // Адрас з выпадковым UUID, таму спасылку не падабраць; заголовак тут перадаць
 // немагчыма (<img src>), таму маршрут стаіць да праверкі initData.
