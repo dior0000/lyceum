@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <title>Ліцэй БДУ · Апошні званок</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="style.css?v=11">
+  <link rel="stylesheet" href="style.css?v=12">
 </head>
 <body>
 
@@ -103,8 +103,9 @@
         </div>
         <div id="feed-empty" class="center-block" hidden>
           <div class="big-emoji">🕊️</div>
-          <p>Анкеты скончыліся.<br>Зазірні пазней!</p>
-          <button class="btn" id="btn-feed-refresh">Абнавіць</button>
+          <p id="feed-empty-text">Анкеты скончыліся.<br>Зазірні пазней!</p>
+          <button class="btn" id="btn-invite">📣 Запрасіць аднакласнікаў</button>
+          <button class="btn ghost" id="btn-feed-refresh">Абнавіць</button>
         </div>
       </div>
       <div class="actions" id="feed-actions" hidden>
@@ -189,6 +190,6 @@
 
   <div id="toast" hidden></div>
 
-  <script src="app.js?v=11"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>

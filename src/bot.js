@@ -42,6 +42,8 @@ bot.command('start', (ctx) =>
   )
 );
 
+bot.command('myid', (ctx) => ctx.reply(`Твой Telegram ID: <code>${ctx.from.id}</code>`, { parse_mode: 'HTML' }));
+
 // ---------- каманды адміністратара ----------
 function isAdmin(ctx) {
   return ADMIN_ID && ctx.from && ctx.from.id === ADMIN_ID;

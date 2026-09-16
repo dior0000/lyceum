@@ -293,6 +293,12 @@ function nextCard() {
   $('feed-card').hidden = !has;
   $('feed-actions').hidden = !has;
   $('feed-empty').hidden = has;
+  if (!has) {
+    // тлумачым, чаму стужка пустая: схаваная ўласная анкета ці проста мала людзей
+    $('feed-empty-text').innerHTML = me && !me.looking
+      ? 'Твая анкета схавана 🙈<br>Уключы «Шукаю пару» ў профілі,<br>каб цябе таксама бачылі.'
+      : 'Пакуль няма новых анкет.<br>Чым больш ліцэістаў, тым больш шанцаў<br>знайсці пару на вальс 💃';
+  }
   if (has) {
     const card = $('feed-card');
     card.classList.remove('fly-left', 'fly-right', 'card-in');
@@ -330,6 +336,13 @@ async function swipe(liked) {
 $('btn-like').onclick = () => swipe(true);
 $('btn-skip').onclick = () => swipe(false);
 $('btn-feed-refresh').onclick = loadFeed;
+
+$('btn-invite').onclick = () => {
+  const link = 'https://t.me/aposhni_vals_bot';
+  const text = 'Шукаеш пару на вальс апошняга званка? Далучайся 💃🕺';
+  const share = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
+  tg?.openTelegramLink ? tg.openTelegramLink(share) : window.open(share, '_blank');
+};
 
 $('btn-report').onclick = () => {
   if (!current) return;
