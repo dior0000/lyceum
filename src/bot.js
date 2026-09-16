@@ -2,7 +2,11 @@ require('dotenv').config();
 const { Bot, InlineKeyboard } = require('grammy');
 const { q, one } = require('./db');
 
-const ADMIN_ID = Number(process.env.ADMIN_ID || 0);
+// ADMIN_ID можа ўтрымліваць некалькі id праз коску
+const ADMIN_IDS = String(process.env.ADMIN_ID || '')
+  .split(',')
+  .map((s) => Number(s.trim()))
+  .filter(Boolean);
 const WEBAPP_URL = process.env.WEBAPP_URL || '';
 
 const bot = new Bot(process.env.BOT_TOKEN || 'no-token');
@@ -46,7 +50,7 @@ bot.command('myid', (ctx) => ctx.reply(`Твой Telegram ID: <code>${ctx.from.i
 
 // ---------- каманды адміністратара ----------
 function isAdmin(ctx) {
-  return ADMIN_ID && ctx.from && ctx.from.id === ADMIN_ID;
+  return !!(ctx.from && ADMIN_IDS.includes(ctx.from.id));
 }
 
 bot.command('admin', (ctx) => {
@@ -157,15 +161,15 @@ async function notifyMatch(a, b) {
 }
 
 async function notifyAdminReport(target, count) {
-  if (!ADMIN_ID) return;
+  if (!ADMIN_IDS.length) return;
+  const text =
+    `⚠️ Скарга на анкету: ${target.name}, ${target.klass} (id ${target.tg_id}` +
+    `${target.username ? ', @' + target.username : ''}). Усяго скаргаў: ${count}.` +
+    (count >= 3 ? '\n🚫 Анкета схавана са стужкі. /approve або /ban' : '');
   try {
     await ensureBotInit();
-    await bot.api.sendMessage(
-      ADMIN_ID,
-      `⚠️ Скарга на анкету: ${target.name}, ${target.klass} (id ${target.tg_id}` +
-        `${target.username ? ', @' + target.username : ''}). Усяго скаргаў: ${count}.` +
-        (count >= 3 ? '\n🚫 Анкета схавана са стужкі. /approve або /ban' : '')
-    );
+    const results = await Promise.allSettled(ADMIN_IDS.map((id) => bot.api.sendMessage(id, text)));
+    for (const r of results) if (r.status === 'rejected') console.error('Не дастаўлена адміну:', r.reason?.message);
   } catch (e) {
     console.error('Не дастаўлена адміну:', e.message);
   }

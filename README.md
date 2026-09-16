@@ -24,7 +24,7 @@
 | `BOT_TOKEN` | токен бота ад @BotFather |
 | `WEBAPP_URL` | адрас праграмы, напр. `https://lyceum-dusky.vercel.app` |
 | `WEBHOOK_SECRET` | сакрэт для праверкі запытаў Telegram |
-| `ADMIN_ID` | Telegram ID адміністратара |
+| `ADMIN_ID` | Telegram ID адміністратара; некалькі — праз коску |
 | `lyceum_DATABASE_URL` | дадаецца аўтаматычна пры падключэнні Neon |
 
 Пасля змены зменных патрэбны **Redeploy**.
